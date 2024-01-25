@@ -28,15 +28,16 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 export const mysqlTable = mysqlTableCreator((name) => `sojourn_${name}`);
 
 export const user = mysqlTable(
-	"User",
+	"auth_user",
 	{
-		id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-		publicId: varchar("publicId", { length: 12 }).notNull(),
+		id: varchar("id", { length: 15 }).primaryKey(),
+		publicId: varchar("public_id", { length: 12 }).notNull(),
 		email: varchar("email", { length: 255 }).notNull(),
 		username: varchar("username", { length: 127 }).unique().notNull(),
+		createdAt: timestamp("created_at").defaultNow(),
 	},
 	(t) => ({
-		userPublicId: uniqueIndex("userPublicId").on(t.publicId),
+		userPublicId: uniqueIndex("user_public_id").on(t.publicId),
 	}),
 );
 
@@ -55,22 +56,26 @@ export const userRelations = relations(user, ({ many }) => ({
 export const key = mysqlTable(
 	"user_key",
 	{
-		id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-		userId: bigint("userId", { mode: "number" }).notNull(),
+		id: varchar("id", {
+			length: 255,
+		}).primaryKey(),
+		userId: varchar("user_id", { length: 15 }).notNull(),
 		hashedPassword: varchar("hashed_password", {
 			length: 255,
 		}),
 	},
 	(t) => ({
-		keyUserIdx: index("keyUserIdx").on(t.userId),
+		keyUserIdx: index("key_user_idx").on(t.userId),
 	}),
 );
 
 export const session = mysqlTable(
 	"user_session",
 	{
-		id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-		userId: bigint("userId", { mode: "number" }).notNull(),
+		id: varchar("id", {
+			length: 128,
+		}).primaryKey(),
+		userId: varchar("user_id", { length: 15 }).notNull(),
 		activeExpires: bigint("active_expires", {
 			mode: "number",
 		}).notNull(),
@@ -84,10 +89,10 @@ export const session = mysqlTable(
 );
 
 export const follower = mysqlTable(
-	"Follower",
+	"follower",
 	{
-		followerId: bigint("followerId", { mode: "number" }).notNull(),
-		followingId: bigint("followingId", { mode: "number" }).notNull(),
+		followerId: bigint("follower_id", { mode: "number" }).notNull(),
+		followingId: bigint("following_id", { mode: "number" }).notNull(),
 	},
 	(t) => ({
 		pk: primaryKey({ columns: [t.followerId, t.followingId] }),
@@ -108,16 +113,16 @@ export const followerRelations = relations(follower, ({ one }) => ({
 }));
 
 export const location = mysqlTable(
-	"Location",
+	"location",
 	{
 		id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-		publicId: varchar("publicId", { length: 12 }).notNull(),
+		publicId: varchar("public_id", { length: 12 }).notNull(),
 		name: varchar("name", { length: 128 }).notNull(),
 		longitude: decimal("longitude", { precision: 8 }).notNull(),
 		latitude: decimal("latitude", { precision: 8 }).notNull(),
 	},
 	(t) => ({
-		locationPublicId: uniqueIndex("locationPublicId").on(t.publicId),
+		locationPublicId: uniqueIndex("location_public_id").on(t.publicId),
 	}),
 );
 export type Location = InferSelectModel<typeof location>;
@@ -130,20 +135,20 @@ export const locationRelations = relations(location, ({ many }) => ({
 }));
 
 export const journey = mysqlTable(
-	"Journey",
+	"journey",
 	{
 		id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-		publicId: varchar("publicId", { length: 12 }).notNull(),
+		publicId: varchar("public_id", { length: 12 }).notNull(),
 		title: varchar("title", { length: 127 }).notNull(),
-		startLocationId: bigint("startLocationId", { mode: "number" }).notNull(),
-		endLocationId: bigint("endLocationId", { mode: "number" }).notNull(),
+		startLocationId: bigint("start_location_id", { mode: "number" }).notNull(),
+		endLocationId: bigint("end_location_id", { mode: "number" }).notNull(),
 		userId: bigint("id", { mode: "number" }).notNull(),
 	},
 	(t) => ({
-		startLocationIdx: index("startLocationIdx").on(t.startLocationId),
-		endLocationIdx: index("endLocationIdx").on(t.endLocationId),
-		journeyUserIdx: index("journeyUserIdx").on(t.userId),
-		journeyPublicId: uniqueIndex("journeyPublicId").on(t.publicId),
+		startLocationIdx: index("start_location_idx").on(t.startLocationId),
+		endLocationIdx: index("end_location_idx").on(t.endLocationId),
+		journeyUserIdx: index("journey_user_idx").on(t.userId),
+		journeyPublicId: uniqueIndex("journey_public_id").on(t.publicId),
 	}),
 );
 export type Journey = InferSelectModel<typeof journey>;
